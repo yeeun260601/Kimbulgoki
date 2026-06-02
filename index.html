@@ -36,6 +36,45 @@ input{width:100%;padding:13px;border-radius:12px;border:1px solid #ddd;font-size
 </div>
 
 <script>
+const timetable = {
+  "1-1": {
+    "월": ["국사", "진로", "수학", "기가", "국어", "통과", "SLAT"],
+    "화": ["통사", "국사", "국어", "수학", "영어", "통과", "체육"],
+    "수": ["수학", "국사", "기가", "통사", "국어", "통과", "SLAT"],
+    "목": ["국어", "영어", "과탐", "기가", "미술", "미술", "통사"],
+    "금": ["영어", "체육", "수학", "통과", "창체", "창체"]
+  }
+};
+
+function showTimetable(){
+  set(`
+    <h2>📚 시간표</h2>
+    <button class="sub" onclick="showDays('1-1')">1학년 1반</button>
+    <button class="back" onclick="set('<div class=&quot;info&quot;>원하는 버튼을 눌러주세요.</div>')">← 처음으로</button>
+  `);
+}
+
+function showDays(cls){
+  set(`
+    <h2>${cls} 시간표</h2>
+    <button class="sub" onclick="showClassDay('${cls}','월')">월요일</button>
+    <button class="sub" onclick="showClassDay('${cls}','화')">화요일</button>
+    <button class="sub" onclick="showClassDay('${cls}','수')">수요일</button>
+    <button class="sub" onclick="showClassDay('${cls}','목')">목요일</button>
+    <button class="sub" onclick="showClassDay('${cls}','금')">금요일</button>
+    <button class="back" onclick="showTimetable()">← 시간표로 돌아가기</button>
+  `);
+}
+
+function showClassDay(cls, day){
+  const list = timetable[cls][day];
+  let html = `<h2>${cls} ${day}요일</h2><div class="info">`;
+  list.forEach((subject, index) => {
+    html += `<b>${index + 1}교시</b> ${subject}<br>`;
+  });
+  html += `</div><button class="back" onclick="showDays('${cls}')">← 요일 다시 선택</button>`;
+  set(html);
+}
 const teachers = [
 {name:"정용길",subject:"",homeroom:"",dept:"교장실",floor:"1층",role:"교장"},
 {name:"하미리",subject:"",homeroom:"",dept:"교감실",floor:"1층",role:"교감"},
