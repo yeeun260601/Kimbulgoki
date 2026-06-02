@@ -1,95 +1,158 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>김불고기</title>
-
 <style>
-body{
-    font-family: sans-serif;
-    background:#f5f5f5;
-    text-align:center;
-    padding:30px;
-}
-
-.container{
-    max-width:500px;
-    margin:auto;
-    background:white;
-    padding:25px;
-    border-radius:20px;
-    box-shadow:0 0 15px rgba(0,0,0,0.1);
-}
-
-h1{
-    color:#ff6b00;
-}
-
-button{
-    width:100%;
-    padding:15px;
-    margin:10px 0;
-    border:none;
-    border-radius:12px;
-    font-size:18px;
-    cursor:pointer;
-}
-
-.result{
-    margin-top:20px;
-    padding:15px;
-    background:#f0f0f0;
-    border-radius:10px;
-}
+body{margin:0;font-family:Arial,sans-serif;background:#fff7ed;color:#222}
+.app{max-width:520px;margin:auto;padding:22px}
+.card{background:white;border-radius:22px;padding:22px;box-shadow:0 6px 20px #0001;margin-bottom:16px}
+h1{color:#f97316;margin-bottom:5px}
+button{width:100%;padding:14px;margin:7px 0;border:0;border-radius:14px;background:#fb923c;color:white;font-size:16px;font-weight:bold}
+.sub{background:#fed7aa;color:#7c2d12}
+.back{background:#ddd;color:#333}
+.info{background:#f3f4f6;border-radius:15px;padding:15px;line-height:1.7}
+.small{font-size:13px;color:#666}
 </style>
 </head>
-
 <body>
-
-<div class="container">
-
-<h1>🤖 김불고기</h1>
-
-<p>불곡고등학교 학생 도우미</p>
-
-<button onclick="meal()">🍚 오늘의 급식</button>
-
-<button onclick="timetable()">📚 오늘의 시간표</button>
-
-<button onclick="teacher()">👨‍🏫 교내 선생님 정보</button>
-
-<button onclick="dday()">📅 학사일정 D-Day</button>
-
-<div class="result" id="result">
-버튼을 눌러주세요.
-</div>
-
+<div class="app">
+  <div class="card">
+    <h1>🤖 김불고기</h1>
+    <p>불곡고등학교 학생 도우미</p>
+    <button onclick="showTeachers()">👨‍🏫 교내 선생님 정보</button>
+    <button onclick="ready('📚 시간표 기능은 다음 단계에서 추가됩니다.')">📚 오늘의 시간표</button>
+    <button onclick="ready('📅 학사일정 D-Day 기능은 다음 단계에서 추가됩니다.')">📅 학사일정 D-Day</button>
+    <button onclick="ready('🍚 급식 자동 조회 기능은 마지막 단계에서 추가됩니다.')">🍚 오늘의 급식</button>
+  </div>
+  <div class="card" id="result">
+    <div class="info">원하는 버튼을 눌러주세요.</div>
+  </div>
 </div>
 
 <script>
+const teachers = [
+{name:"박하영",subject:"물리",role:"부장",dept:"교무기획부",location:"본교무실",floor:""},
+{name:"변은숙",subject:"일사",role:"",dept:"교무기획부",location:"본교무실",floor:""},
+{name:"조민혜",subject:"수학",role:"",dept:"교무기획부",location:"본교무실",floor:""},
+{name:"김기현",subject:"윤리",role:"",dept:"교무기획부",location:"본교무실",floor:""},
+{name:"한원화",subject:"중어",role:"부장",dept:"교육연구부",location:"본교무실",floor:""},
+{name:"최승희",subject:"역사",role:"",dept:"교육연구부",location:"본교무실",floor:""},
+{name:"이규은",subject:"일사",role:"",dept:"교육연구부",location:"본교무실",floor:""},
+{name:"정지혜",subject:"국어",role:"부장",dept:"교육과정부",location:"본교무실",floor:""},
+{name:"김배림",subject:"음악",role:"",dept:"교육과정부",location:"본교무실",floor:""},
+{name:"홍솔메",subject:"지리",role:"",dept:"교육과정부",location:"본교무실",floor:""},
+{name:"류정미",subject:"행정실무",role:"",dept:"본교무실",location:"본교무실",floor:""},
+{name:"최이경",subject:"행정실무",role:"",dept:"본교무실",location:"본교무실",floor:""},
+{name:"윤성희",subject:"상담",role:"위클래스상담",dept:"상담",location:"인성상담실",floor:""},
+{name:"김수영",subject:"보건",role:"보건총괄",dept:"보건",location:"보건실",floor:""},
+{name:"류순이",subject:"실장",role:"업무총괄",dept:"교육행정실",location:"교육행정실",floor:""},
+{name:"정문오",subject:"과장",role:"예산집행",dept:"교육행정실",location:"교육행정실",floor:""},
+{name:"모주영",subject:"계장",role:"지출, 시설",dept:"교육행정실",location:"교육행정실",floor:""},
+{name:"서혜정",subject:"주무관",role:"급여, 초근",dept:"교육행정실",location:"교육행정실",floor:""},
+{name:"김아름",subject:"주무관",role:"세입, 민원",dept:"교육행정실",location:"교육행정실",floor:""},
+{name:"김영석",subject:"주무관",role:"시설관리",dept:"교육행정실",location:"교육행정실",floor:""},
+{name:"최은정",subject:"영양사",role:"급식관리",dept:"교육행정실",location:"교육행정실",floor:""},
+{name:"김영숙",subject:"주무관",role:"시설미화",dept:"교육행정실",location:"교육행정실",floor:""},
+{name:"김갑식",subject:"주무관",role:"시설당직",dept:"교육행정실",location:"교육행정실",floor:""},
+{name:"송경화",subject:"진로",role:"부장",dept:"진로상담부",location:"진로상담부",floor:""},
+{name:"하미리",subject:"교감",role:"교감",dept:"교감",location:"교감실",floor:""},
+{name:"김경우",subject:"국어",role:"부장",dept:"1학년부",location:"1학년부",floor:"2층"},
+{name:"송승연",subject:"기술",role:"1-1 담임",dept:"1학년부",location:"1학년부",floor:"2층"},
+{name:"김양일",subject:"영어",role:"1-2 담임",dept:"1학년부",location:"1학년부",floor:"2층"},
+{name:"이명희",subject:"수학",role:"1-3 담임",dept:"1학년부",location:"1학년부",floor:"2층"},
+{name:"장혜경",subject:"통과",role:"1-4 담임",dept:"1학년부",location:"1학년부",floor:"2층"},
+{name:"이형지",subject:"화학",role:"1-5 담임",dept:"1학년부",location:"1학년부",floor:"2층"},
+{name:"김대영",subject:"영어",role:"1-6 담임",dept:"1학년부",location:"1학년부",floor:"2층"},
+{name:"김한수",subject:"체육",role:"1-7 담임",dept:"1학년부",location:"1학년부",floor:"2층"},
+{name:"유지형",subject:"일사",role:"1-8 담임",dept:"1학년부",location:"1학년부",floor:"2층"},
+{name:"임지영",subject:"역사",role:"1-9 담임",dept:"1학년부",location:"1학년부",floor:"2층"},
+{name:"이영진",subject:"특수학급 담임",role:"",dept:"특수학급",location:"전환교육실",floor:""},
+{name:"김영훈",subject:"사회복무",role:"장애학생지원",dept:"특수학급",location:"전환교육실",floor:""},
+{name:"손진경",subject:"체육",role:"부장",dept:"학생안전인권부",location:"학생안전인권부",floor:""},
+{name:"김민석",subject:"수학",role:"학폭",dept:"학생안전인권부",location:"학생안전인권부",floor:""},
+{name:"신영미",subject:"영어",role:"학생자치",dept:"학생안전인권부",location:"학생안전인권부",floor:""},
+{name:"최태현",subject:"영어",role:"안전",dept:"학생안전인권부",location:"학생안전인권부",floor:""},
+{name:"장양희",subject:"생물",role:"부장",dept:"자연과학부",location:"자연과학부",floor:""},
+{name:"박영주",subject:"지학",role:"자연교육",dept:"자연과학부",location:"자연과학부",floor:""},
+{name:"김민주",subject:"한문",role:"부장",dept:"인문사회부",location:"인문사회부",floor:""},
+{name:"송영란",subject:"국어",role:"인문교육",dept:"인문사회부",location:"인문사회부",floor:""},
+{name:"박미숙",subject:"수학",role:"부장",dept:"교육정보부",location:"교육정보부",floor:""},
+{name:"조연우",subject:"정컴",role:"기자재, 방송",dept:"교육정보부",location:"교육정보부",floor:""},
+{name:"경현지",subject:"체육",role:"예술체육",dept:"예술체육부",location:"예술체육부",floor:""},
+{name:"최현세",subject:"운동부",role:"펜싱코치",dept:"예술체육부",location:"예술체육부",floor:""},
+{name:"신시온",subject:"미술",role:"부장",dept:"예술체육부",location:"예술체육부",floor:""},
+{name:"동예진",subject:"특수학급부담임",role:"",dept:"특수학급",location:"전환교육실",floor:""}
+];
 
-function meal(){
-document.getElementById("result").innerHTML =
-"오늘의 급식 기능은 준비 중입니다.";
+function set(html){document.getElementById("result").innerHTML = html;}
+function ready(text){set(`<div class="info">${text}</div>`);}
+
+function showTeachers(){
+ set(`
+  <h2>👨‍🏫 선생님 정보</h2>
+  <button onclick="showHomeroom()" class="sub">담임</button>
+  <button onclick="showSubjects()" class="sub">과목</button>
+  <button onclick="showDepartments()" class="sub">부서</button>
+  <button onclick="showEtc()" class="sub">기타</button>
+ `);
 }
 
-function timetable(){
-document.getElementById("result").innerHTML =
-"시간표 기능은 준비 중입니다.";
+function showHomeroom(){
+ const list = teachers.filter(t=>t.role.includes("담임"));
+ showList("담임 선생님", list);
 }
 
-function teacher(){
-document.getElementById("result").innerHTML =
-"선생님 정보 기능은 준비 중입니다.";
+function showSubjects(){
+ const subjects = [...new Set(teachers.map(t=>t.subject))].sort();
+ set(`<h2>과목 선택</h2>` + subjects.map(s=>`<button class="sub" onclick="showBySubject('${s}')">${s}</button>`).join("") + back());
 }
 
-function dday(){
-document.getElementById("result").innerHTML =
-"지필평가 D-Day 기능은 준비 중입니다.";
+function showBySubject(subject){
+ showList(subject, teachers.filter(t=>t.subject===subject));
 }
 
+function showDepartments(){
+ const depts = [...new Set(teachers.map(t=>t.dept))].sort();
+ set(`<h2>부서 선택</h2>` + depts.map(d=>`<button class="sub" onclick="showByDept('${d}')">${d}</button>`).join("") + back());
+}
+
+function showByDept(dept){
+ showList(dept, teachers.filter(t=>t.dept===dept));
+}
+
+function showEtc(){
+ const list = teachers.filter(t =>
+  ["교감","보건","상담","교육행정실","특수학급"].some(k => t.dept.includes(k) || t.subject.includes(k) || t.role.includes(k))
+ );
+ showList("기타", list);
+}
+
+function showList(title, list){
+ set(`<h2>${title}</h2>` + list.map((t,i)=>`
+  <button class="sub" onclick="showDetail('${t.name}')">${t.name} ${t.role ? "(" + t.role + ")" : ""}</button>
+ `).join("") + back());
+}
+
+function showDetail(name){
+ const t = teachers.find(x=>x.name===name);
+ set(`
+  <h2>${t.name} 선생님</h2>
+  <div class="info">
+   과목/업무: ${t.subject}<br>
+   ${t.role ? "역할: " + t.role + "<br>" : ""}
+   소속: ${t.dept}<br><br>
+   📍 위치: ${t.location}<br>
+   ${t.floor ? "층수: " + t.floor + "<br>" : ""}
+  </div>
+  ${back()}
+ `);
+}
+
+function back(){
+ return `<button class="back" onclick="showTeachers()">← 선생님 정보로 돌아가기</button>`;
+}
 </script>
-
 </body>
 </html>
