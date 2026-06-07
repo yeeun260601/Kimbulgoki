@@ -28,7 +28,7 @@ input{width:100%;padding:13px;border-radius:12px;border:1px solid #ddd;font-size
     <button onclick="showTeachers()">👨‍🏫 교내 선생님 정보</button>
     <button onclick="showTimetable()">📚 오늘의 시간표</button>
     <button onclick="showCalendar()">📅 학사일정 D-Day</button>
-    <button onclick="ready('🍚 급식 자동 조회 기능은 마지막 단계에서 추가됩니다.')">🍚 오늘의 급식</button>
+    <button onclick="showMeal()">🍚 오늘의 급식</button>
   </div>
 
   <div class="card" id="result">
@@ -359,6 +359,55 @@ function showTermEvents(term){
   });
   html += `</div><button class="back" onclick="showTerms()">← 학기 선택으로 돌아가기</button>`;
   set(html);
+}
+async function showMeal(){
+  set(`<h2>🍚 오늘의 급식</h2><div class="info">급식 정보를 불러오는 중입니다...</div>`);
+
+  const today = getTodayYMD();
+  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=B000012460&MLSV_YMD=${today}`;
+
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if(!data.mealServiceDietInfo){
+      set(`
+        <h2>🍚 오늘의 급식</h2>
+        <div class="info">오늘 등록된 급식 정보가 없습니다.</div>
+        ${mainBack()}
+      `);
+      return;
+    }
+
+    const meal = data.mealServiceDietInfo[1].row[0];
+    const menu = meal.DDISH_NM
+      .replaceAll("<br/>", "<br>")
+      .replace(/\([0-9.]+\)/g, "");
+
+    set(`
+      <h2>🍚 오늘의 급식</h2>
+      <div class="info">
+        <b>${meal.MLSV_YMD.slice(0,4)}.${meal.MLSV_YMD.slice(4,6)}.${meal.MLSV_YMD.slice(6,8)}</b><br><br>
+        ${menu}
+      </div>
+      ${mainBack()}
+    `);
+
+  }catch(error){
+    set(`
+      <h2>🍚 오늘의 급식</h2>
+      <div class="info">급식 정보를 불러오지 못했습니다.</div>
+      ${mainBack()}
+    `);
+  }
+}
+
+function getTodayYMD(){
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return `${yyyy}${mm}${dd}`;
 }
 </script>
 </body>
