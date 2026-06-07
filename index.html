@@ -25,7 +25,11 @@ input{width:100%;padding:13px;border-radius:12px;border:1px solid #ddd;font-size
   <div class="card">
     <h1><i>AI Kimbulgogi</i></h1>
     <p>필요한 메뉴를 선택해주세요.<p>
-    <div id="todayDate" style="margin:10px 0;color:#666;font-size:14px;"></div>
+    <div class="info" id="homeDday" style="margin-bottom:15px;">
+
+가장 가까운 일정 계산 중...
+
+</div>
     <button onclick="showTeachers()">👨‍🏫 교내 선생님 정보</button>
     <button onclick="showTimetable()">📚 오늘의 시간표</button>
     <button onclick="showCalendar()">📅 학사일정 D-Day</button>
@@ -36,16 +40,6 @@ input{width:100%;padding:13px;border-radius:12px;border:1px solid #ddd;font-size
     <div class="info">원하는 버튼을 눌러주세요.</div>
   </div>
 </div>
-
-const now = new Date();
-
-const weekdays = [
-"일요일","월요일","화요일",
-"수요일","목요일","금요일","토요일"
-];
-
-document.getElementById("todayDate").innerHTML =
-`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,"0")}.${String(now.getDate()).padStart(2,"0")} ${weekdays[now.getDay()]}`;
 
 <script>
 const teachers = [
