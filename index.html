@@ -286,7 +286,23 @@ const schoolEvents = [
   {term:"2학기", name:"신정", start:"2027-01-01"},
   {term:"2학기", name:"졸업식/종업식", start:"2027-01-05"}
 ];
+window.onload = function(){
 
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const upcoming = schoolEvents
+    .filter(e => new Date(e.start) >= today)
+    .sort((a,b)=>new Date(a.start)-new Date(b.start));
+
+  if(upcoming.length){
+    const next = upcoming[0];
+
+    document.getElementById("homeDday").innerHTML =
+      `<b>가장 가까운 일정</b><br>${next.name}<br>${getDday(next.start)}`;
+  }
+
+};
 function getDday(date){
   const today = new Date();
   today.setHours(0,0,0,0);
