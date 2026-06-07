@@ -24,9 +24,9 @@ input{width:100%;padding:13px;border-radius:12px;border:1px solid #ddd;font-size
 <div class="app">
   <div class="card">
     <h1><i>AI Kimbulgogi</i></h1>
-    <p>필요한 메뉴를 선택해주세요.<p>
+    <p>필요한 메뉴를 선택해주세요.</p>
     <div id="todayDate" style="margin-bottom:10px;color:#666;font-size:14px;"></div>
-    <div class="info" id="aiSummary" style="margin-bottom:15px;">
+    <div class="info" id="aiSummary" style="margin-bottom:15px;background:#eff6ff;border:1px solid #bfdbfe;">
 오늘의 AI 요약 불러오는 중...
 </div>
     <div class="info" id="homeDday" style="margin-bottom:15px;">
@@ -309,6 +309,12 @@ window.onload = function(){
 "수요일","목요일","금요일","토요일"
 ];
 
+document.getElementById("aiSummary").innerHTML = `
+<b>오늘의 AI 요약</b><br>
+📅 학사일정 확인 가능<br>
+🍚 오늘 급식 확인 가능<br>
+📖 가장 가까운 시험 확인 가능
+`;
 document.getElementById("todayDate").innerHTML =
 `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,"0")}.${String(today.getDate()).padStart(2,"0")} ${weekdays[today.getDay()]}`;
 
