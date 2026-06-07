@@ -29,11 +29,6 @@ input{width:100%;padding:13px;border-radius:12px;border:1px solid #ddd;font-size
     <div class="info" id="aiSummary" style="margin-bottom:15px;background:#eff6ff;border:1px solid #bfdbfe;">
 오늘의 AI 요약 불러오는 중...
 </div>
-    <div class="info" id="homeDday" style="margin-bottom:15px;">
-
-가장 가까운 일정 계산 중...
-
-</div>
     <button onclick="showTeachers()"> 교내 선생님 정보</button>
     <button onclick="showTimetable()"> 오늘의 시간표</button>
     <button onclick="showCalendar()"> 학사일정 D-Day</button>
@@ -307,7 +302,7 @@ window.onload = function(){
 document.getElementById("aiSummary").innerHTML = `
 <b>오늘의 AI 요약</b><br>
 📅 ${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,"0")}.${String(today.getDate()).padStart(2,"0")} ${weekdays[today.getDay()]}<br>
-🍚 오늘 급식 확인 가능
+📌 ${next.name} ${getDday(next.start)}
 `;
 document.getElementById("todayDate").innerHTML =
 `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,"0")}.${String(today.getDate()).padStart(2,"0")} ${weekdays[today.getDay()]}`;
@@ -315,8 +310,6 @@ document.getElementById("todayDate").innerHTML =
   if(upcoming.length){
     const next = upcoming[0];
 
-    document.getElementById("homeDday").innerHTML =
-      `<b>가장 가까운 일정</b><br>${next.name}<br>${getDday(next.start)}`;
   }
 
 };
