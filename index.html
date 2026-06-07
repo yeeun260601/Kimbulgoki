@@ -26,6 +26,9 @@ input{width:100%;padding:13px;border-radius:12px;border:1px solid #ddd;font-size
     <h1><i>AI Kimbulgogi</i></h1>
     <p>필요한 메뉴를 선택해주세요.<p>
     <div id="todayDate" style="margin-bottom:10px;color:#666;font-size:14px;"></div>
+    <div class="info" id="aiSummary" style="margin-bottom:15px;">
+오늘의 AI 요약 불러오는 중...
+</div>
     <div class="info" id="homeDday" style="margin-bottom:15px;">
 
 가장 가까운 일정 계산 중...
@@ -287,6 +290,12 @@ const schoolEvents = [
   {term:"2학기", name:"신정", start:"2027-01-01"},
   {term:"2학기", name:"졸업식/종업식", start:"2027-01-05"}
 ];
+document.getElementById("aiSummary").innerHTML = `
+<b>오늘의 AI 요약</b><br>
+📅 오늘 일정 확인 가능<br>
+🍚 오늘 급식 확인 가능<br>
+📖 가장 가까운 시험 확인 가능
+`;
 window.onload = function(){
 
   const today = new Date();
