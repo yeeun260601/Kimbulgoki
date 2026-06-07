@@ -27,7 +27,7 @@ input{width:100%;padding:13px;border-radius:12px;border:1px solid #ddd;font-size
     <p>불곡고등학교 학생 도우미</p>
     <button onclick="showTeachers()">👨‍🏫 교내 선생님 정보</button>
     <button onclick="showTimetable()">📚 오늘의 시간표</button>
-    <button onclick="ready('📅 학사일정 D-Day 기능은 다음 단계에서 추가됩니다.')">📅 학사일정 D-Day</button>
+    <button onclick="showCalendar()">📅 학사일정 D-Day</button>
     <button onclick="ready('🍚 급식 자동 조회 기능은 마지막 단계에서 추가됩니다.')">🍚 오늘의 급식</button>
   </div>
 
@@ -242,6 +242,123 @@ list.forEach((subject,index)=>{
 });
 html+=`</div><button class="back" onclick="showDays('${cls}')">← 요일 다시 선택</button>`;
 set(html);
+}
+
+const schoolEvents = [
+  {term:"1학기", name:"개학식/입학식", start:"2026-03-03"},
+  {term:"1학기", name:"기초학력진단", start:"2026-03-17"},
+  {term:"1학기", name:"학부모총회", start:"2026-03-18"},
+  {term:"1학기", name:"전국연합학력평가", start:"2026-03-24", exam:true},
+  {term:"1학기", name:"수학여행(2학년)", start:"2026-04-01", end:"2026-04-03"},
+  {term:"1학기", name:"1차 지필평가", start:"2026-04-27", end:"2026-05-01", exam:true},
+  {term:"1학기", name:"학교장재량휴업일", start:"2026-05-04"},
+  {term:"1학기", name:"어린이날", start:"2026-05-05"},
+  {term:"1학기", name:"전국연합학력평가(3학년)", start:"2026-05-07", exam:true},
+  {term:"1학기", name:"어울림 체육대축제 올다모임(2학년)", start:"2026-05-15"},
+  {term:"1학기", name:"부처님오신날", start:"2026-05-25"},
+  {term:"1학기", name:"교육과정박람회", start:"2026-05-26"},
+  {term:"1학기", name:"지방선거일", start:"2026-06-03"},
+  {term:"1학기", name:"전국연합학력평가", start:"2026-06-04", exam:true},
+  {term:"1학기", name:"2차 지필평가", start:"2026-06-29", end:"2026-07-03", exam:true},
+  {term:"1학기", name:"제헌절", start:"2026-07-17"},
+  {term:"1학기", name:"방학식", start:"2026-07-21"},
+
+  {term:"2학기", name:"개학식", start:"2026-08-13"},
+  {term:"2학기", name:"대체공휴일", start:"2026-08-17"},
+  {term:"2학기", name:"전국연합학력평가/대수능모의평가", start:"2026-09-02", exam:true},
+  {term:"2학기", name:"추석연휴", start:"2026-09-24", end:"2026-09-26"},
+  {term:"2학기", name:"1차 지필평가", start:"2026-09-28", end:"2026-10-02", exam:true},
+  {term:"2학기", name:"대체공휴일", start:"2026-10-05"},
+  {term:"2학기", name:"한글날", start:"2026-10-09"},
+  {term:"2학기", name:"전국연합학력평가", start:"2026-10-20", exam:true},
+  {term:"2학기", name:"금요일시간표운용", start:"2026-11-14"},
+  {term:"2학기", name:"수능예비소집일", start:"2026-11-17"},
+  {term:"2학기", name:"대학수학능력시험", start:"2026-11-19", exam:true},
+  {term:"2학기", name:"2차 지필(3학년)", start:"2026-11-23", end:"2026-11-27", exam:true},
+  {term:"2학기", name:"2차 지필(1,2학년)", start:"2026-12-14", end:"2026-12-18", exam:true},
+  {term:"2학기", name:"성탄절", start:"2026-12-25"},
+  {term:"2학기", name:"동아리발표회", start:"2026-12-30"},
+  {term:"2학기", name:"신정", start:"2027-01-01"},
+  {term:"2학기", name:"졸업식/종업식", start:"2027-01-05"}
+];
+
+function getDday(date){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const target = new Date(date);
+  target.setHours(0,0,0,0);
+  const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+  if(diff === 0) return "D-Day";
+  if(diff > 0) return `D-${diff}`;
+  return `D+${Math.abs(diff)}`;
+}
+
+function formatDate(event){
+  const s = event.start.slice(5).replace("-", "/");
+  if(event.end){
+    const e = event.end.slice(5).replace("-", "/");
+    return `${s} ~ ${e}`;
+  }
+  return s;
+}
+
+function showCalendar(){
+  set(`
+    <h2>📅 학사일정</h2>
+    <button class="sub" onclick="showUpcomingEvents()">다가오는 일정 D-Day</button>
+    <button class="sub" onclick="showExamEvents()">시험 일정만 보기</button>
+    <button class="sub" onclick="showTerms()">전체 학사일정 보기</button>
+    ${mainBack()}
+  `);
+}
+
+function showUpcomingEvents(){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const upcoming = schoolEvents
+    .filter(e => new Date(e.start) >= today)
+    .sort((a,b) => new Date(a.start) - new Date(b.start))
+    .slice(0, 8);
+
+  let html = `<h2>다가오는 일정</h2><div class="info">`;
+  upcoming.forEach(e => {
+    html += `<div class="period"><b>${e.name}</b><br>${formatDate(e)}<br>${getDday(e.start)}</div>`;
+  });
+  html += `</div><button class="back" onclick="showCalendar()">← 학사일정으로 돌아가기</button>`;
+  set(html);
+}
+
+function showExamEvents(){
+  const exams = schoolEvents
+    .filter(e => e.exam)
+    .sort((a,b) => new Date(a.start) - new Date(b.start));
+
+  let html = `<h2>시험 일정</h2><div class="info">`;
+  exams.forEach(e => {
+    html += `<div class="period"><b>${e.name}</b><br>${formatDate(e)}<br>${getDday(e.start)}</div>`;
+  });
+  html += `</div><button class="back" onclick="showCalendar()">← 학사일정으로 돌아가기</button>`;
+  set(html);
+}
+
+function showTerms(){
+  set(`
+    <h2>전체 학사일정</h2>
+    <button class="sub" onclick="showTermEvents('1학기')">1학기</button>
+    <button class="sub" onclick="showTermEvents('2학기')">2학기</button>
+    <button class="back" onclick="showCalendar()">← 학사일정으로 돌아가기</button>
+  `);
+}
+
+function showTermEvents(term){
+  const list = schoolEvents.filter(e => e.term === term);
+  let html = `<h2>${term} 학사일정</h2><div class="info">`;
+  list.forEach(e => {
+    html += `<div class="period"><b>${formatDate(e)}</b><br>${e.name}</div>`;
+  });
+  html += `</div><button class="back" onclick="showTerms()">← 학기 선택으로 돌아가기</button>`;
+  set(html);
 }
 </script>
 </body>
