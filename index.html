@@ -364,7 +364,7 @@ function showMeal(){
   set(`
     <h2>🍚 급식</h2>
     <button class="sub" onclick="showTodayMeal()">오늘 급식</button>
-    <button class="sub" onclick="showTomorrowMeal()">내일 급식</button>
+    <button class="sub" onclick="showNextMeal()">다음 급식</button>
     <button class="sub" onclick="showMonthlyMeals()">이번 달 급식표</button>
     ${mainBack()}
   `);
@@ -375,55 +375,72 @@ async function showTodayMeal(){
   await showMealByDate(today, "오늘");
 }
 
-async function showTomorrowMeal(){
-  const tomorrow = getKoreaDate(1);
-  await showMealByDate(tomorrow, "내일");
+async function showNextMeal(){
+  set(`<h2>🍚 다음 급식</h2><div class="info">가장 가까운 급식일을 찾는 중입니다...</div>`);
+
+  for(let i = 1; i <= 14; i++){
+    const date = getKoreaDate(i);
+    const meal = await fetchMeal(date);
+    if(meal){
+      showMealResult(meal, "다음");
+      return;
+    }
+  }
+
+  set(`
+    <h2>🍚 다음 급식</h2>
+    <div class="info">앞으로 2주 안에 등록된 급식 정보가 없습니다.</div>
+    <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
+  `);
 }
 
 async function showMealByDate(date, label){
-  const prettyDate = `${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6,8)}`;
-  set(`<h2>🍚 ${label} 급식</h2><div class="info">${label} (${prettyDate}) 급식을 불러오는 중입니다...</div>`);
+  const meal = await fetchMeal(date);
 
-  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pSize=100&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=7530077&MLSV_FROM_YMD=${ym}01&MLSV_TO_YMD=${ym}31`;
+  if(meal){
+    showMealResult(meal, label);
+  }else{
+    const prettyDate = prettyYMD(date);
+    set(`
+      <h2>🍚 ${label} 급식</h2>
+      <div class="info">
+        <b>${label} (${prettyDate})</b><br><br>
+        등록된 급식 정보가 없습니다.
+      </div>
+      <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
+    `);
+  }
+}
+
+async function fetchMeal(date){
+  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pSize=100&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=7530077&MLSV_YMD=${date}`;
 
   try{
     const res = await fetch(url);
     const data = await res.json();
 
     if(data.mealServiceDietInfo && data.mealServiceDietInfo[1]){
-      const meal = data.mealServiceDietInfo[1].row[0];
-      const menu = cleanMeal(meal.DDISH_NM);
-      const calorie = meal.CAL_INFO ? `<br><br><b>칼로리</b><br>${meal.CAL_INFO}` : "";
-
-      set(`
-        <h2>🍚 ${label} 급식</h2>
-        <div class="info">
-          <b>${label} (${prettyDate})</b><br><br>
-          ${menu}
-          ${calorie}
-        </div>
-        <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
-      `);
-    }else{
-      set(`
-        <h2>🍚 ${label} 급식</h2>
-        <div class="info">
-          <b>${label} (${prettyDate})</b><br><br>
-          등록된 급식 정보가 없습니다.
-        </div>
-        <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
-      `);
+      return data.mealServiceDietInfo[1].row[0];
     }
+    return null;
   }catch(error){
-    set(`
-      <h2>🍚 ${label} 급식</h2>
-      <div class="info">
-        <b>${label} (${prettyDate})</b><br><br>
-        급식 정보를 불러오지 못했습니다.
-      </div>
-      <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
-    `);
+    return null;
   }
+}
+
+function showMealResult(meal, label){
+  const date = meal.MLSV_YMD;
+  const prettyDate = prettyYMD(date);
+  const menu = cleanMeal(meal.DDISH_NM);
+
+  set(`
+    <h2>🍚 ${label} 급식</h2>
+    <div class="info">
+      <b>${label} (${prettyDate})</b><br><br>
+      ${menu}
+    </div>
+    <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
+  `);
 }
 
 async function showMonthlyMeals(){
@@ -433,7 +450,7 @@ async function showMonthlyMeals(){
 
   set(`<h2>🍚 이번 달 급식표</h2><div class="info">${prettyMonth} 급식표를 불러오는 중입니다...</div>`);
 
-  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=7530077&MLSV_FROM_YMD=${ym}01&MLSV_TO_YMD=${ym}31`;
+  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=1000&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=7530077&MLSV_FROM_YMD=${ym}01&MLSV_TO_YMD=${ym}31`;
 
   try{
     const res = await fetch(url);
@@ -447,13 +464,11 @@ async function showMonthlyMeals(){
       rows.forEach(meal => {
         const date = `${meal.MLSV_YMD.slice(4,6)}/${meal.MLSV_YMD.slice(6,8)}`;
         const menu = cleanMeal(meal.DDISH_NM);
-        const calorie = meal.CAL_INFO ? `<br><b>칼로리:</b> ${meal.CAL_INFO}` : "";
 
         html += `
           <div class="period">
             <b>${date}</b><br>
             ${menu}
-            ${calorie}
           </div>
         `;
       });
@@ -463,7 +478,9 @@ async function showMonthlyMeals(){
     }else{
       set(`
         <h2>🍚 이번 달 급식표</h2>
-        <div class="info">이번 달 급식 정보가 없습니다.</div>
+        <div class="info">
+          현재 공개된 이번 달 급식 정보가 없습니다.
+        </div>
         <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
       `);
     }
@@ -481,6 +498,10 @@ function cleanMeal(menu){
     .replaceAll("<br/>", "<br>")
     .replaceAll("<br />", "<br>")
     .replace(/\([0-9.]+\)/g, "");
+}
+
+function prettyYMD(date){
+  return `${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6,8)}`;
 }
 
 function getKoreaDate(addDays){
