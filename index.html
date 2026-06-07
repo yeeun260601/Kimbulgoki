@@ -299,18 +299,18 @@ window.onload = function(){
 "수요일","목요일","금요일","토요일"
 ];
 
-document.getElementById("aiSummary").innerHTML = `
-<b>오늘의 AI 요약</b><br>
-📅 ${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,"0")}.${String(today.getDate()).padStart(2,"0")} ${weekdays[today.getDay()]}<br>
-📌 ${next.name} ${getDday(next.start)}
-`;
 document.getElementById("todayDate").innerHTML =
 `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,"0")}.${String(today.getDate()).padStart(2,"0")} ${weekdays[today.getDay()]}`;
 
-  if(upcoming.length){
+if(upcoming.length){
     const next = upcoming[0];
 
-  }
+    document.getElementById("aiSummary").innerHTML = `
+    <b>오늘의 AI 요약</b><br>
+    📅 ${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,"0")}.${String(today.getDate()).padStart(2,"0")} ${weekdays[today.getDay()]}<br>
+    📌 ${next.name} ${getDday(next.start)}
+    `;
+}
 
 };
 function getDday(date){
