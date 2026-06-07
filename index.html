@@ -363,8 +363,10 @@ function showTermEvents(term){
 async function showMeal(){
   set(`<h2>🍚 오늘의 급식</h2><div class="info">급식 정보를 불러오는 중입니다...</div>`);
 
-  const today = getTodayYMD();
-  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=B000012460&MLSV_YMD=${today}`;
+  const today = getKoreaToday();
+  const ym = today.slice(0, 6);
+
+  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=B000012460&MLSV_FROM_YMD=${ym}01&MLSV_TO_YMD=${ym}31`;
 
   try{
     const res = await fetch(url);
@@ -373,21 +375,35 @@ async function showMeal(){
     if(!data.mealServiceDietInfo){
       set(`
         <h2>🍚 오늘의 급식</h2>
-        <div class="info">오늘 등록된 급식 정보가 없습니다.</div>
+        <div class="info">이번 달 급식 정보를 불러오지 못했습니다.</div>
         ${mainBack()}
       `);
       return;
     }
 
-    const meal = data.mealServiceDietInfo[1].row[0];
-    const menu = meal.DDISH_NM
+    const rows = data.mealServiceDietInfo[1].row;
+    const todayMeal = rows.find(row => row.MLSV_YMD === today);
+
+    if(!todayMeal){
+      set(`
+        <h2>🍚 오늘의 급식</h2>
+        <div class="info">
+          오늘 등록된 급식 정보가 없습니다.<br>
+          학교 사정, 휴일, 또는 급식 미등록일일 수 있습니다.
+        </div>
+        ${mainBack()}
+      `);
+      return;
+    }
+
+    const menu = todayMeal.DDISH_NM
       .replaceAll("<br/>", "<br>")
       .replace(/\([0-9.]+\)/g, "");
 
     set(`
       <h2>🍚 오늘의 급식</h2>
       <div class="info">
-        <b>${meal.MLSV_YMD.slice(0,4)}.${meal.MLSV_YMD.slice(4,6)}.${meal.MLSV_YMD.slice(6,8)}</b><br><br>
+        <b>${todayMeal.MLSV_YMD.slice(0,4)}.${todayMeal.MLSV_YMD.slice(4,6)}.${todayMeal.MLSV_YMD.slice(6,8)}</b><br><br>
         ${menu}
       </div>
       ${mainBack()}
@@ -402,11 +418,12 @@ async function showMeal(){
   }
 }
 
-function getTodayYMD(){
+function getKoreaToday(){
   const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
+  const korea = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+  const yyyy = korea.getFullYear();
+  const mm = String(korea.getMonth() + 1).padStart(2, "0");
+  const dd = String(korea.getDate()).padStart(2, "0");
   return `${yyyy}${mm}${dd}`;
 }
 </script>
