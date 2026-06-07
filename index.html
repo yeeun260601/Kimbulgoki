@@ -360,13 +360,31 @@ function showTermEvents(term){
   html += `</div><button class="back" onclick="showTerms()">← 학기 선택으로 돌아가기</button>`;
   set(html);
 }
-async function showMeal(){
-  const today = getKoreaToday();
-  const prettyDate = `${today.slice(0,4)}.${today.slice(4,6)}.${today.slice(6,8)}`;
+function showMeal(){
+  set(`
+    <h2>🍚 급식</h2>
+    <button class="sub" onclick="showTodayMeal()">오늘 급식</button>
+    <button class="sub" onclick="showTomorrowMeal()">내일 급식</button>
+    <button class="sub" onclick="showMonthlyMeals()">이번 달 급식표</button>
+    ${mainBack()}
+  `);
+}
 
-  set(`<h2>🍚 오늘의 급식</h2><div class="info">오늘 (${prettyDate}) 급식 정보를 불러오는 중입니다...</div>`);
+async function showTodayMeal(){
+  const today = getKoreaDate(0);
+  await showMealByDate(today, "오늘");
+}
 
-  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=7530077&MLSV_YMD=${today}`;
+async function showTomorrowMeal(){
+  const tomorrow = getKoreaDate(1);
+  await showMealByDate(tomorrow, "내일");
+}
+
+async function showMealByDate(date, label){
+  const prettyDate = `${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6,8)}`;
+  set(`<h2>🍚 ${label} 급식</h2><div class="info">${label} (${prettyDate}) 급식을 불러오는 중입니다...</div>`);
+
+  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=7530077&MLSV_YMD=${date}`;
 
   try{
     const res = await fetch(url);
@@ -374,50 +392,106 @@ async function showMeal(){
 
     if(data.mealServiceDietInfo && data.mealServiceDietInfo[1]){
       const meal = data.mealServiceDietInfo[1].row[0];
-      const menu = meal.DDISH_NM
-        .replaceAll("<br/>", "<br>")
-        .replace(/\([0-9.]+\)/g, "");
+      const menu = cleanMeal(meal.DDISH_NM);
+      const calorie = meal.CAL_INFO ? `<br><br><b>칼로리</b><br>${meal.CAL_INFO}` : "";
 
       set(`
-        <h2>🍚 오늘의 급식</h2>
+        <h2>🍚 ${label} 급식</h2>
         <div class="info">
-          <b>오늘 (${prettyDate})</b><br><br>
+          <b>${label} (${prettyDate})</b><br><br>
           ${menu}
+          ${calorie}
         </div>
-        ${mainBack()}
+        <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
       `);
-      return;
+    }else{
+      set(`
+        <h2>🍚 ${label} 급식</h2>
+        <div class="info">
+          <b>${label} (${prettyDate})</b><br><br>
+          등록된 급식 정보가 없습니다.
+        </div>
+        <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
+      `);
     }
-
-    set(`
-      <h2>🍚 오늘의 급식</h2>
-      <div class="info">
-        <b>오늘 (${prettyDate})</b><br><br>
-        급식 정보가 아직 등록되지 않았거나, 조회가 잠시 안 되고 있습니다.<br>
-        네이버에서 <b>불곡고 급식</b>을 검색해 확인해주세요.
-      </div>
-      ${mainBack()}
-    `);
-
   }catch(error){
     set(`
-      <h2>🍚 오늘의 급식</h2>
+      <h2>🍚 ${label} 급식</h2>
       <div class="info">
-        <b>오늘 (${prettyDate})</b><br><br>
-        급식 정보를 불러오지 못했습니다.<br>
-        네이버에서 <b>불곡고 급식</b>을 검색해 확인해주세요.
+        <b>${label} (${prettyDate})</b><br><br>
+        급식 정보를 불러오지 못했습니다.
       </div>
-      ${mainBack()}
+      <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
     `);
   }
 }
 
-function getKoreaToday(){
+async function showMonthlyMeals(){
+  const today = getKoreaDate(0);
+  const ym = today.slice(0,6);
+  const prettyMonth = `${today.slice(0,4)}.${today.slice(4,6)}`;
+
+  set(`<h2>🍚 이번 달 급식표</h2><div class="info">${prettyMonth} 급식표를 불러오는 중입니다...</div>`);
+
+  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=7530077&MLSV_FROM_YMD=${ym}01&MLSV_TO_YMD=${ym}31`;
+
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if(data.mealServiceDietInfo && data.mealServiceDietInfo[1]){
+      const rows = data.mealServiceDietInfo[1].row;
+
+      let html = `<h2>🍚 ${prettyMonth} 급식표</h2><div class="info">`;
+
+      rows.forEach(meal => {
+        const date = `${meal.MLSV_YMD.slice(4,6)}/${meal.MLSV_YMD.slice(6,8)}`;
+        const menu = cleanMeal(meal.DDISH_NM);
+        const calorie = meal.CAL_INFO ? `<br><b>칼로리:</b> ${meal.CAL_INFO}` : "";
+
+        html += `
+          <div class="period">
+            <b>${date}</b><br>
+            ${menu}
+            ${calorie}
+          </div>
+        `;
+      });
+
+      html += `</div><button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>`;
+      set(html);
+    }else{
+      set(`
+        <h2>🍚 이번 달 급식표</h2>
+        <div class="info">이번 달 급식 정보가 없습니다.</div>
+        <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
+      `);
+    }
+  }catch(error){
+    set(`
+      <h2>🍚 이번 달 급식표</h2>
+      <div class="info">이번 달 급식표를 불러오지 못했습니다.</div>
+      <button class="back" onclick="showMeal()">← 급식 메뉴로 돌아가기</button>
+    `);
+  }
+}
+
+function cleanMeal(menu){
+  return menu
+    .replaceAll("<br/>", "<br>")
+    .replaceAll("<br />", "<br>")
+    .replace(/\([0-9.]+\)/g, "");
+}
+
+function getKoreaDate(addDays){
   const now = new Date();
-  const korea = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Seoul"}));
+  const korea = new Date(now.toLocaleString("en-US", {timeZone:"Asia/Seoul"}));
+  korea.setDate(korea.getDate() + addDays);
+
   const yyyy = korea.getFullYear();
   const mm = String(korea.getMonth() + 1).padStart(2, "0");
   const dd = String(korea.getDate()).padStart(2, "0");
+
   return `${yyyy}${mm}${dd}`;
 }
 </script>
