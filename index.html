@@ -25,6 +25,7 @@ input{width:100%;padding:13px;border-radius:12px;border:1px solid #ddd;font-size
   <div class="card">
     <h1><i>AI Kimbulgogi</i></h1>
     <p>필요한 메뉴를 선택해주세요.<p>
+    <div id="todayDate" style="margin-bottom:10px;color:#666;font-size:14px;"></div>
     <div class="info" id="homeDday" style="margin-bottom:15px;">
 
 가장 가까운 일정 계산 중...
@@ -294,6 +295,13 @@ window.onload = function(){
   const upcoming = schoolEvents
     .filter(e => new Date(e.start) >= today)
     .sort((a,b)=>new Date(a.start)-new Date(b.start));
+    const weekdays = [
+"일요일","월요일","화요일",
+"수요일","목요일","금요일","토요일"
+];
+
+document.getElementById("todayDate").innerHTML =
+`${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,"0")}.${String(today.getDate()).padStart(2,"0")} ${weekdays[today.getDay()]}`;
 
   if(upcoming.length){
     const next = upcoming[0];
