@@ -361,51 +361,55 @@ function showTermEvents(term){
   set(html);
 }
 async function showMeal(){
-  set(`<h2>🍚 오늘의 급식</h2><div class="info">급식 정보를 확인하는 중입니다...</div>`);
-
   const today = getKoreaToday();
+  const prettyDate = `${today.slice(0,4)}.${today.slice(4,6)}.${today.slice(6,8)}`;
 
-  const urls = [
-    `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=B000012460&MLSV_YMD=${today}`,
-    `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=7530272&MLSV_YMD=${today}`
-  ];
+  set(`<h2>🍚 오늘의 급식</h2><div class="info">오늘 (${prettyDate}) 급식 정보를 불러오는 중입니다...</div>`);
 
-  for(const url of urls){
-    try{
-      const res = await fetch(url);
-      const data = await res.json();
+  const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&ATPT_OFCDC_SC_CODE=J10&SD_SCHUL_CODE=7530077&MLSV_YMD=${today}`;
 
-      if(data.mealServiceDietInfo && data.mealServiceDietInfo[1]){
-        const meal = data.mealServiceDietInfo[1].row[0];
-        const menu = meal.DDISH_NM
-          .replaceAll("<br/>", "<br>")
-          .replace(/\([0-9.]+\)/g, "");
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
 
-        set(`
-          <h2>🍚 오늘의 급식</h2>
-          <div class="info">
-            <b>${meal.MLSV_YMD.slice(0,4)}.${meal.MLSV_YMD.slice(4,6)}.${meal.MLSV_YMD.slice(6,8)}</b><br><br>
-            ${menu}
-          </div>
-          ${mainBack()}
-        `);
-        return;
-      }
-    }catch(e){}
+    if(data.mealServiceDietInfo && data.mealServiceDietInfo[1]){
+      const meal = data.mealServiceDietInfo[1].row[0];
+      const menu = meal.DDISH_NM
+        .replaceAll("<br/>", "<br>")
+        .replace(/\([0-9.]+\)/g, "");
+
+      set(`
+        <h2>🍚 오늘의 급식</h2>
+        <div class="info">
+          <b>오늘 (${prettyDate})</b><br><br>
+          ${menu}
+        </div>
+        ${mainBack()}
+      `);
+      return;
+    }
+
+    set(`
+      <h2>🍚 오늘의 급식</h2>
+      <div class="info">
+        <b>오늘 (${prettyDate})</b><br><br>
+        급식 정보가 아직 등록되지 않았거나, 조회가 잠시 안 되고 있습니다.<br>
+        네이버에서 <b>불곡고 급식</b>을 검색해 확인해주세요.
+      </div>
+      ${mainBack()}
+    `);
+
+  }catch(error){
+    set(`
+      <h2>🍚 오늘의 급식</h2>
+      <div class="info">
+        <b>오늘 (${prettyDate})</b><br><br>
+        급식 정보를 불러오지 못했습니다.<br>
+        네이버에서 <b>불곡고 급식</b>을 검색해 확인해주세요.
+      </div>
+      ${mainBack()}
+    `);
   }
-
-  set(`
-    <h2>🍚 오늘의 급식</h2>
-    <div class="info">
-      급식 정보를 불러오지 못했습니다.<br><br>
-      가능한 원인:<br>
-      1. 학교 코드가 다를 수 있음<br>
-      2. NEIS API에서 오늘 날짜 급식이 아직 연결되지 않았을 수 있음<br>
-      3. API 접속이 일시적으로 막혔을 수 있음<br><br>
-      다음 단계에서 학교 코드를 다시 확인해볼게.
-    </div>
-    ${mainBack()}
-  `);
 }
 
 function getKoreaToday(){
